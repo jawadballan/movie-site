@@ -7,15 +7,17 @@ import AddMovieForm from "./components/AddMovieForm.jsx";
 import { movies } from "./data/movies.js";
 
 function App() {
+  const [movieList, setMovieList] = useState(movies);
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("all");
   const [sortBy, setSortBy] = useState("rating");
 
-  const topRated = movies.filter((movie) => movie.rating >= 8.7);
+  const topRated = movieList.filter((movie) => movie.rating >= 8.7);
+
   const text = query.trim().toLowerCase();
 
-  let shownMovies = movies;
+  let shownMovies = movieList;
   if (onlyAvailable) {
     shownMovies = shownMovies.filter((movie) => movie.available);
   }
@@ -23,13 +25,13 @@ function App() {
     shownMovies = shownMovies.filter((movie) => movie.genre === genre);
   }
   if (text !== "") {
-    shownMovies = shownMovies.filter(
-      (movie) =>
-        movie.title.toLowerCase().includes(text) ||
-        String(movie.year).includes(text),
+    shownMovies = shownMovies.filter((movie) =>
+      movie.title.toLowerCase().includes(text),
     );
   }
   shownMovies = [...shownMovies].sort(compareMovies);
+
+  const isFiltered = onlyAvailable || genre !== "all" || text !== "";
 
   function compareMovies(a, b) {
     if (sortBy === "year") {
@@ -38,14 +40,21 @@ function App() {
     if (sortBy === "title") {
       return a.title.localeCompare(b.title);
     }
-    if(sortBy === "duration")
-      return a.duration - b.duration;
-
     return b.rating - a.rating;
   }
 
   function toggleAvailable() {
     setOnlyAvailable(!onlyAvailable);
+  }
+
+  function resetFilters() {
+    setOnlyAvailable(false);
+    setQuery("");
+    setGenre("all");
+  }
+
+  function addMovie(movie) {
+    setMovieList([...movieList, movie]);
   }
 
   return (
@@ -74,11 +83,19 @@ function App() {
           >
             רק זמינים לצפייה
           </button>
+          {isFiltered && (
+            <button className="btn" onClick={resetFilters}>
+              ניקוי
+            </button>
+          )}
         </div>
 
-        <MovieList title="כל הסרטים" movies={shownMovies} />
+        <MovieList
+          title={`כל הסרטים (${shownMovies.length})`}
+          movies={shownMovies}
+        />
 
-        <AddMovieForm />
+        <AddMovieForm onAdd={addMovie} />
       </main>
       <Footer />
     </>
